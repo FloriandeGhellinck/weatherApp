@@ -1,80 +1,109 @@
+import { hashQueryKey, useQuery } from '@tanstack/react-query';
 import React, { Dispatch, FC, SetStateAction, useState } from 'react';
 import { APIProps, Coords } from '../types/meteoData';
 
-const API_KEY = '1ddbc2b4f348fbfb47f710c84367037c';
-const API_ROAD = 'https://api.openweathermap.org/data/2.5/weather?';
-
 const SearchBar: FC<{
-  setError: Dispatch<SetStateAction<string | null>>;
-  setSearchData: Dispatch<SetStateAction<APIProps | undefined>>;
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
-}> = ({ setError, setSearchData, setIsLoading }) => {
-  const [message, setMessage] = useState<string>('');
+  setMessage: Dispatch<SetStateAction<string | null>>;
+}> = ({ setMessage }) => {
+  // const getLocation = async () => {
+  //   const response = await fetch(
+  //     `https://api.openweathermap.org/geo/1.0/direct?q=${message}&appid=${API_KEY}`
+  //   );
+  //   if (!response.ok) {
+  //     throw new Error('City not known');
+  //   }
+  //   const data: Coords = await response.json();
 
-  const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
+  //   const { lat, lon, name } = data[0];
+  //   const responseAfterCity = await fetch(
+  //     `${API_ROAD}lat=${lat}&lon=${lon}&appid=${API_KEY}`
+  //   );
+
+  //   if (!responseAfterCity.ok) {
+  //     throw new Error('Something went wrong');
+  //   }
+  //   const dataNext = await responseAfterCity.json();
+
+  //   const dataProcessed: APIProps = {
+  //     id: dataNext.id,
+  //     country: name,
+  //     weather: dataNext.weather[0].main,
+  //     temp: +(dataNext.main.temp - 273.15).toFixed(2),
+  //     humidity: dataNext.main.humidity,
+  //     speed: dataNext.wind.speed,
+  //   };
+
+  //   return dataProcessed;
+  // };
+
+  // const queryKey = ['location', message];
+  // const { isLoading, data, error, refetch } = useQuery(queryKey, getLocation, {
+  //   enabled: false,
+  // });
+
+  // const getMeteo = async (messageInput: string) => {
+  //   try {
+  //     const response = await fetch(
+  //       `https://api.openweathermap.org/geo/1.0/direct?q=${messageInput}&appid=${API_KEY}`
+  //     );
+  //     // console.log(response);
+  //     if (!response.ok) {
+  //       throw new Error('City not known');
+  //     }
+  //     const data: Coords = await response.json();
+
+  //     const lat = data[0].lat;
+  //     const lon = data[0].lon;
+  //     const city = data[0].name;
+  //     // const coords = {
+  //     //   name: data[0].name,
+  //     //   lat: data[0].lat,
+  //     //   lon: data[0].lon,
+  //     // };
+  //     // setCoords(coords);
+
+  //     const responseAfterCity = await fetch(
+  //       `${API_ROAD}lat=${lat}&lon=${lon}&appid=${API_KEY}`
+  //     );
+
+  //     if (!responseAfterCity.ok) {
+  //       setIsLoading(false);
+  //       throw new Error('Something went wrong');
+  //     }
+  //     const dataNext = await responseAfterCity.json();
+
+  //     const dataProcessed: APIProps = {
+  //       id: dataNext.id,
+  //       country: city,
+  //       weather: dataNext.weather[0].main,
+  //       temp: +(dataNext.main.temp - 273.15).toFixed(2),
+  //       humidity: dataNext.main.humidity,
+  //       speed: dataNext.wind.speed,
+  //     };
+
+  //     setSearchData(dataProcessed);
+
+  //     setIsLoading(false);
+  //   } catch (e: any) {
+  //     setError(e.message);
+  //   }
+  // };
+
+  const [messageSearchBar, setMessageSearchBar] = useState('');
+
+  const handleOnChange = (e: any) => {
+    setMessageSearchBar(e.target.value);
   };
 
-  const getMeteo = async (messageInput: string) => {
-    try {
-      const response = await fetch(
-        `https://api.openweathermap.org/geo/1.0/direct?q=${messageInput}&appid=${API_KEY}`
-      );
-      // console.log(response);
-      if (!response.ok) {
-        throw new Error('City not known');
-      }
-      const data: Coords = await response.json();
-
-      const lat = data[0].lat;
-      const lon = data[0].lon;
-      const city = data[0].name;
-      // const coords = {
-      //   name: data[0].name,
-      //   lat: data[0].lat,
-      //   lon: data[0].lon,
-      // };
-      // setCoords(coords);
-
-      const responseAfterCity = await fetch(
-        `${API_ROAD}lat=${lat}&lon=${lon}&appid=${API_KEY}`
-      );
-
-      if (!responseAfterCity.ok) {
-        setIsLoading(false);
-        throw new Error('Something went wrong');
-      }
-      const dataNext = await responseAfterCity.json();
-
-      const dataProcessed: APIProps = {
-        id: dataNext.id,
-        country: city,
-        weather: dataNext.weather[0].main,
-        temp: +(dataNext.main.temp - 273.15).toFixed(2),
-        humidity: dataNext.main.humidity,
-        speed: dataNext.wind.speed,
-      };
-
-      setSearchData(dataProcessed);
-
-      setIsLoading(false);
-    } catch (e: any) {
-      setError(e.message);
-    }
-  };
-
-  const handleClick = () => {
-    if (!message) {
-      return;
-    }
-    getMeteo(message);
-
+  const handleOnClick = () => {
+    setMessage(messageSearchBar);
+    // getMeteo(message);
     // setMessage('');
   };
 
-  const keyPress = (e: React.KeyboardEvent) => {
-    if (e.key == 'Enter') {
-      handleClick();
+  const handleKeyboardPress = (e: any) => {
+    if (e.keyCode === 13) {
+      handleOnClick();
     }
   };
 
@@ -84,19 +113,20 @@ const SearchBar: FC<{
         <div className='input-group relative flex flex-wrap items-stretch  mb-4 gap-2'>
           <input
             type='search'
+            id='msg'
             className='form-control relative px-3 py-1.5 w-fit text-base text-gray-700 bg-transparent bg-clip-padding border border-gray-400 rounded focus:bg-white focus:border-blue-600 focus:outline-none'
             placeholder='Search City'
             aria-label='Search'
             aria-describedby='button-addon2'
-            value={message}
+            value={messageSearchBar || ''}
             onChange={handleOnChange}
-            onKeyDown={keyPress}
+            onKeyDown={handleKeyboardPress}
           />
           <button
             className='px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md transition duration-150 ease-in-out flex items-center '
             type='button'
             id='button-addon2'
-            onClick={handleClick}
+            onClick={handleOnClick}
           >
             <svg
               aria-hidden='true'

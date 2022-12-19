@@ -1,18 +1,59 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import map from 'lodash/map';
 
 import Card from '../components/card';
 import DisplayMessage from '../components/displayMessage';
 import SearchBar from '../components/searchBar';
-import { APIProps } from '../types/meteoData';
+import { APIProps, Coords } from '../types/meteoData';
+import { useQuery } from '@tanstack/react-query';
+
+const API_KEY = '1ddbc2b4f348fbfb47f710c84367037c';
+const API_ROAD = 'https://api.openweathermap.org/data/2.5/weather?';
 
 export default function Home() {
-  const [searchData, setSearchData] = useState<APIProps | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<null | string>(null);
+  const [message, setMessage] = useState<string | null>('');
   const [allCities, setAllCities] = useState<APIProps[]>([]);
+
+  const getLocation = async ({ queryKey }: any) => {
+    const response = await fetch(
+      `https://api.openweathermap.org/geo/1.0/direct?q=${queryKey[1]}&appid=${API_KEY}`
+    );
+    if (!response.ok) {
+      throw new Error('City not known');
+    }
+    const data: Coords = await response.json();
+
+    const { lat, lon, name } = data[0];
+    const responseAfterCity = await fetch(
+      `${API_ROAD}lat=${lat}&lon=${lon}&appid=${API_KEY}`
+    );
+
+    if (!responseAfterCity.ok) {
+      throw new Error('Something went wrong');
+    }
+    const dataNext = await responseAfterCity.json();
+
+    const dataProcessed: APIProps = {
+      id: dataNext.id,
+      country: name,
+      weather: dataNext.weather[0].main,
+      temp: +(dataNext.main.temp - 273.15).toFixed(2),
+      humidity: dataNext.main.humidity,
+      speed: dataNext.wind.speed,
+    };
+
+    return dataProcessed;
+  };
+
+  const queryKey = ['location', message];
+  const { isFetching, data, isError, error } = useQuery<
+    APIProps,
+    Error,
+    APIProps
+  >(queryKey, getLocation, {
+    enabled: !!message,
+  });
 
   useEffect(() => {
     setAllCities(JSON.parse(localStorage.getItem('city') || '[]'));
@@ -34,44 +75,42 @@ export default function Home() {
       <main className='flex flex-col justify-center h-screen items-center bg-embie-blue-light-300'>
         <h1 className='text-4xl font bold text-black'> Weather Forecast ☀️ </h1>
         <div className='h-5/6 w-10/12 md:w-6/12 flex flex-col border-black items-center bg-gray-200 border-4 rounded-lg'>
-          <SearchBar
-            setError={setError}
-            setSearchData={setSearchData}
-            setIsLoading={setIsLoading}
-          />
-          {!error && !searchData && (
-            <DisplayMessage message='Enter a city name !' />
-          )}
-          {error && !searchData && <DisplayMessage message={error} />}
-          {isLoading && <DisplayMessage message='Loading...' />}
-
-          {searchData && (
-            <Card
-              city={searchData}
-              allCities={allCities}
-              setAllCities={handleSetAllCities}
-            />
-          )}
-          <div className='w-full border-t-4 border-black my-3 flex flex-col items-center justify-center py-2'>
-            {/* <DisplayMessage message='Registered cities ' /> */}
-
-            {allCities.length == 0 && (
-              <DisplayMessage message='No cities registered yet' />
+          <>
+            <SearchBar setMessage={setMessage} />
+            {!isError && !data && !error && !isFetching && (
+              <DisplayMessage message='Enter a city name !' />
             )}
-            {allCities.length > 0 &&
-              map(allCities, (city) => (
-                <div
-                  key={city.id}
-                  className='flex flex-col w-full items-center py-1'
-                >
-                  <Card
-                    city={city}
-                    allCities={allCities}
-                    setAllCities={handleSetAllCities}
-                  />
-                </div>
-              ))}
-          </div>
+            {error && !data && <DisplayMessage message={error.message} />}
+            {isFetching && <DisplayMessage message='Loading...' />}
+
+            {data && (
+              <Card
+                city={data}
+                allCities={allCities}
+                setAllCities={handleSetAllCities}
+              />
+            )}
+            <div className='w-full border-t-4 border-black my-3 flex flex-col items-center justify-center py-2'>
+              {/* <DisplayMessage message='Registered cities ' /> */}
+
+              {allCities.length == 0 && (
+                <DisplayMessage message='No cities registered yet' />
+              )}
+              {allCities.length > 0 &&
+                map(allCities, (city) => (
+                  <div
+                    key={city.id}
+                    className='flex flex-col w-full items-center py-1'
+                  >
+                    <Card
+                      city={city}
+                      allCities={allCities}
+                      setAllCities={handleSetAllCities}
+                    />
+                  </div>
+                ))}
+            </div>
+          </>
         </div>
       </main>
 
