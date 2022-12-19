@@ -18,7 +18,7 @@ const SearchBar: FC<{
   const getMeteo = async (messageInput: string) => {
     try {
       const response = await fetch(
-        `http://api.openweathermap.org/geo/1.0/direct?q=${messageInput}&appid=${API_KEY}`
+        `https://api.openweathermap.org/geo/1.0/direct?q=${messageInput}&appid=${API_KEY}`
       );
       // console.log(response);
       if (!response.ok) {
