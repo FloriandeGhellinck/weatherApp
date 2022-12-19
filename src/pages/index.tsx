@@ -33,7 +33,7 @@ export default function Home() {
 
       <main className='flex flex-col justify-center h-screen items-center bg-embie-blue-light-300'>
         <h1 className='text-4xl font bold text-black'> Weather Forecast ☀️ </h1>
-        <div className='h-5/6 w-6/12 flex flex-col border-black items-center bg-gray-200 border-4 rounded-lg'>
+        <div className='h-5/6 w-10/12 md:w-6/12 flex flex-col border-black items-center bg-gray-200 border-4 rounded-lg'>
           <SearchBar
             setError={setError}
             setSearchData={setSearchData}
