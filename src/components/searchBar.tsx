@@ -1,15 +1,14 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react';
+import React, { Dispatch, FC, SetStateAction, useState } from 'react';
 import { APIProps, Coords } from '../types/meteoData';
 
 const API_KEY = '1ddbc2b4f348fbfb47f710c84367037c';
 const API_ROAD = 'https://api.openweathermap.org/data/2.5/weather?';
 
 const SearchBar: FC<{
-  // setCoords: Dispatch<SetStateAction<Coords | undefined>>;
   setError: Dispatch<SetStateAction<string | null>>;
-  setMeteoData: Dispatch<SetStateAction<APIProps | undefined>>;
+  setSearchData: Dispatch<SetStateAction<APIProps | undefined>>;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
-}> = ({ /*setCoords,*/ setError, setMeteoData, setIsLoading }) => {
+}> = ({ setError, setSearchData, setIsLoading }) => {
   const [message, setMessage] = useState<string>('');
 
   const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,7 +26,6 @@ const SearchBar: FC<{
       }
       const data: Coords = await response.json();
 
-      console.log(data);
       const lat = data[0].lat;
       const lon = data[0].lon;
       const city = data[0].name;
@@ -44,7 +42,6 @@ const SearchBar: FC<{
 
       if (!responseAfterCity.ok) {
         setIsLoading(false);
-
         throw new Error('Something went wrong');
       }
       const dataNext = await responseAfterCity.json();
@@ -58,7 +55,8 @@ const SearchBar: FC<{
         speed: dataNext.wind.speed,
       };
 
-      setMeteoData(dataProcessed);
+      setSearchData(dataProcessed);
+
       setIsLoading(false);
     } catch (e: any) {
       setError(e.message);
@@ -70,21 +68,29 @@ const SearchBar: FC<{
       return;
     }
     getMeteo(message);
+
     // setMessage('');
+  };
+
+  const keyPress = (e: React.KeyboardEvent) => {
+    if (e.key == 'Enter') {
+      handleClick();
+    }
   };
 
   return (
     <div className='pt-5 w-9/12'>
       <div className='mb-3 xl:w-96'>
-        <div className='input-group relative flex flex-wrap items-stretch w-full mb-4 gap-2'>
+        <div className='input-group relative flex flex-wrap items-stretch  mb-4 gap-2'>
           <input
             type='search'
-            className='form-control relative flex-auto min-w-0 block px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none'
+            className='form-control relative px-3 py-1.5 w-fit text-base text-gray-700 bg-transparent bg-clip-padding border border-gray-400 rounded focus:bg-white focus:border-blue-600 focus:outline-none'
             placeholder='Search City'
             aria-label='Search'
             aria-describedby='button-addon2'
             value={message}
             onChange={handleOnChange}
+            onKeyDown={keyPress}
           />
           <button
             className='px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md transition duration-150 ease-in-out flex items-center '
