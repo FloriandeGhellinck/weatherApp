@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react';
+import { FC, useState } from 'react';
 import { HeartSVG } from '../assets/svg/heart';
 import { APIProps } from '../types/meteoData';
 import BoxComponent from './box';
